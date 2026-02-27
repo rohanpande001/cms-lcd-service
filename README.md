@@ -2,7 +2,7 @@
 
 A FastAPI microservice that wraps the CMS Local Coverage Determination (LCD) API and returns all coverage data for a CPT/HCPCS code in a **single call** — CPT codes, ICD-10 medical necessity codes, and modifier codes.
 
-Built for **Prior Authorization workflows**: given a procedure code, instantly retrieve every ICD-10 diagnosis that establishes medical necessity.
+Built for **Claims** & **Prior Authorization workflows**: given a procedure code, instantly retrieve every ICD-10 diagnosis that establishes medical necessity.
 
 ---
 
