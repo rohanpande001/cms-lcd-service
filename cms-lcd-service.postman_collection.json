@@ -1,0 +1,234 @@
+{
+  "info": {
+    "name": "CMS LCD Coverage Service",
+    "description": "A unified wrapper around the CMS Local Coverage Determination (LCD) API.\n\nGiven a CPT/HCPCS code, returns all coverage data in a single call:\n- CPT/HCPCS codes governed by the LCD article\n- ICD-10 codes establishing medical necessity\n- Modifier codes\n\n**Article ID resolution (automatic):**\nThe service resolves the article ID for you using a local mapping built from the CMS bulk download (18,370 HCPC code rows, 1,115 articles, last updated Feb 23 2026).\n- If the code is in the local mapping → article ID resolved instantly, no extra network call\n- If not found locally → falls back to CMS reverse lookup\n- If neither finds a match → 404 with a prompt to supply `article_id` directly\n\n`article_id` is now optional for most codes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL of the running service. Change this to point at any environment."
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            },
+            "description": "Basic liveness check. Returns 200 if the service is up."
+          }
+        },
+        {
+          "name": "CMS Token Status",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/token-status",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "token-status"]
+            },
+            "description": "Shows the current state of the cached CMS Bearer token (expiry, validity, minutes remaining)."
+          }
+        }
+      ]
+    },
+    {
+      "name": "LCD Coverage — No article_id needed",
+      "description": "These requests omit `article_id`. The service resolves it automatically from the local HCPC mapping.",
+      "item": [
+        {
+          "name": "J9217 — Leuprolide Acetate",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code=J9217",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "J9217",
+                  "description": "Leuprolide acetate (depot suspension), 7.5 mg"
+                }
+              ]
+            },
+            "description": "Auto-resolves to article 52453 (LHRH Analogs).\nReturns 14 CPT/HCPCS codes and 493 ICD-10 medical necessity codes.\n\nNo article_id required."
+          }
+        },
+        {
+          "name": "82306 — Vitamin D (25 hydroxy)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code=82306",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "82306",
+                  "description": "Vitamin D; 25 hydroxy"
+                }
+              ]
+            },
+            "description": "Auto-resolves to article 56416 (first match — 7 articles govern this code).\n\nNo article_id required."
+          }
+        },
+        {
+          "name": "Custom CPT Code (auto-resolve)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code=XXXXX",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "XXXXX",
+                  "description": "Replace with any CPT/HCPCS code"
+                }
+              ]
+            },
+            "description": "Replace `XXXXX` with any CPT/HCPCS code.\n\nThe service will:\n1. Check the local HCPC→article mapping (4,184 unique codes)\n2. If not found, attempt CMS reverse lookup\n3. If neither resolves, return 404 — supply article_id directly in that case"
+          }
+        }
+      ]
+    },
+    {
+      "name": "LCD Coverage — article_id override",
+      "description": "Use these when you know the article ID and want to skip the lookup entirely (faster, and useful when a code maps to multiple articles and you need a specific one).",
+      "item": [
+        {
+          "name": "J9271 — Pembrolizumab (article override)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code=J9271&article_id=52453",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "J9271"
+                },
+                {
+                  "key": "article_id",
+                  "value": "52453",
+                  "description": "Pass numeric ID only — no 'A' prefix"
+                }
+              ]
+            },
+            "description": "J9271 is not in the local mapping so article_id must be supplied directly.\n\nPass the numeric part only (52453, not A52453) — the CMS API rejects the 'A' prefix."
+          }
+        },
+        {
+          "name": "82306 — Vitamin D (specific article override)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code=82306&article_id=52399",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "82306"
+                },
+                {
+                  "key": "article_id",
+                  "value": "52399",
+                  "description": "Override to a specific article when multiple exist"
+                }
+              ]
+            },
+            "description": "82306 maps to 7 different articles. Auto-resolve picks the first (56416).\nUse article_id to target a specific one, e.g. 52399."
+          }
+        },
+        {
+          "name": "Custom CPT Code (manual article_id)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code=XXXXX&article_id=YYYYY",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "XXXXX",
+                  "description": "Your CPT/HCPCS code"
+                },
+                {
+                  "key": "article_id",
+                  "value": "YYYYY",
+                  "description": "Numeric article ID from article_hcpc_mapping.csv"
+                }
+              ]
+            },
+            "description": "Template for codes that need a manually specified article ID.\n\nRefer to `article_hcpc_mapping.csv` to find the article ID for any code."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Bulk Lookup (Collection Runner)",
+      "description": "Run this folder with Postman's Collection Runner using `article_hcpc_mapping.csv` as the data file to sweep all 18,370 HCPC code rows.\n\n**How to run:**\n1. Click the collection name → **Run collection**\n2. Select only this folder\n3. Under **Data** → **Select File** → choose `article_hcpc_mapping.csv`\n4. Set iterations to match row count (18,370) or a smaller sample\n5. Click **Run**\n\n**CSV variables available per row:**\n- `{{article_id}}` — numeric article ID\n- `{{display_id}}` — CMS display ID (e.g. A52453)\n- `{{article_title}}` — full article title\n- `{{hcpc_code}}` — CPT/HCPCS code\n- `{{short_description}}` — brief description\n- `{{long_description}}` — full description",
+      "item": [
+        {
+          "name": "Get Coverage — CSV driven (no article_id param)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/v1/lcd/coverage?cpt_code={{hcpc_code}}",
+              "host": ["{{base_url}}"],
+              "path": ["v1", "lcd", "coverage"],
+              "query": [
+                {
+                  "key": "cpt_code",
+                  "value": "{{hcpc_code}}",
+                  "description": "Driven from hcpc_code column in article_hcpc_mapping.csv"
+                }
+              ]
+            },
+            "description": "Article ID is resolved automatically by the service — no need to pass it.\n\nDriven by `article_hcpc_mapping.csv` via Collection Runner.\n\n**Data file:** `article_hcpc_mapping.csv` (CMS bulk download, Feb 23 2026)\n**Total articles:** 1,115 | **Total rows:** 18,370"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const articleTitle = pm.iterationData.get('article_title');",
+                  "const hcpcCode = pm.iterationData.get('hcpc_code');",
+                  "const articleId = pm.iterationData.get('article_id');",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const body = pm.response.json();",
+                  "    console.log(`[${articleId}] ${hcpcCode} | CPT: ${body.total_cpt_codes} | ICD10: ${body.total_icd10_codes} | ${articleTitle}`);",
+                  "    pm.test(`${hcpcCode} returned coverage data`, () => {",
+                  "        pm.expect(body.total_cpt_codes).to.be.a('number');",
+                  "    });",
+                  "} else {",
+                  "    console.warn(`[${articleId}] ${hcpcCode} → ${pm.response.code}`);",
+                  "    pm.test(`${hcpcCode} → ${pm.response.code}`, () => { pm.expect(pm.response.code).to.equal(200); });",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
