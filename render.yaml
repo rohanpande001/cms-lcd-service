@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: cms-lcd-service
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: CMS_LCD_BASE_URL
+        value: https://api.coverage.cms.gov/v1
+      - key: CMS_LICENSE_AMA
+        value: true
+      - key: CMS_LICENSE_ADA
+        value: true
+      - key: CMS_LICENSE_AHA
+        value: true
+      - key: TOKEN_REFRESH_BUFFER_MINUTES
+        value: 5
+      - key: TOKEN_EXPIRY_MINUTES
+        value: 60
+      - key: HTTP_TIMEOUT_SECONDS
+        value: 30.0
+      - key: LOG_LEVEL
+        value: INFO
