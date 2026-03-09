@@ -2,9 +2,11 @@ services:
   - type: web
     name: cms-lcd-service
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
       - key: CMS_LCD_BASE_URL
         value: https://api.coverage.cms.gov/v1
       - key: CMS_LICENSE_AMA
