@@ -4,6 +4,9 @@ A FastAPI microservice that wraps the CMS Local Coverage Determination (LCD) API
 
 Built for **Claims** & **Prior Authorization workflows**: given a procedure code, instantly retrieve every ICD-10 diagnosis that establishes medical necessity.
 
+**Live deployment:** <https://cms-lcd-service.onrender.com> — GUI at <https://cms-lcd-service.onrender.com/ui>, API docs at <https://cms-lcd-service.onrender.com/docs>. (Free tier: the instance may sleep after ~15 min idle; the first request then takes ~30–60 s to wake.)
+
+
 ---
 
 ## How It Works
@@ -88,10 +91,10 @@ Server logs: `logs/server.out.log` / `logs/server.err.log` · Decision audit:
 
 | URL | Description |
 |---|---|
-| http://localhost:8000/ui | **Web GUI** — J code + billing state → supported ICD-10 DX codes for that jurisdiction, **or** search by article number → that article's full covered-DX list (+ optional dx verification either way) |
-| http://localhost:8000/docs | Interactive Swagger UI |
-| http://localhost:8000/redoc | ReDoc documentation |
-| http://localhost:8000/health | Health check |
+| https://cms-lcd-service.onrender.com/ui | **Web GUI** — J code + billing state → supported ICD-10 DX codes for that jurisdiction, **or** search by article number → that article's full covered-DX list (+ optional dx verification either way) |
+| https://cms-lcd-service.onrender.com/docs | Interactive Swagger UI |
+| https://cms-lcd-service.onrender.com/redoc | ReDoc documentation |
+| https://cms-lcd-service.onrender.com/health | Health check |
 
 ---
 
@@ -119,7 +122,7 @@ Many CPT/HCPCS codes map to *multiple* LCD articles (e.g. `J1568` maps to 8 IVIG
 Pass the patient's diagnosis to get the exact article:
 
 ```bash
-curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J1568&icd10=D69.3"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/coverage?cpt_code=J1568&icd10=D69.3"
 ```
 
 Resolution order:
@@ -161,7 +164,7 @@ Pass the billing `state` (and optionally the payer `contractor`):
 
 ```bash
 # New York claim: resolves to A59105 (the NY Part B article), not A56718 (Palmetto)
-curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J1568&state=NY"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/coverage?cpt_code=J1568&state=NY"
 ```
 
 - The response `jurisdiction` field states the scope applied (e.g. `jurisdiction: New York`)
@@ -185,7 +188,7 @@ When `article_id` is omitted:
 **Example — no article_id needed**
 
 ```bash
-curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J9217"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/coverage?cpt_code=J9217"
 ```
 
 ```json
@@ -207,7 +210,7 @@ curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J9217"
 **Example — multi-article code disambiguated by diagnosis**
 
 ```bash
-curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J1568&icd10=D69.3"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/coverage?cpt_code=J1568&icd10=D69.3"
 ```
 
 ```json
@@ -226,7 +229,7 @@ curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J1568&icd10=D69.3"
 **Example — with article_id override**
 
 ```bash
-curl "http://localhost:8000/v1/lcd/coverage?cpt_code=J9271&article_id=52453"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/coverage?cpt_code=J9271&article_id=52453"
 ```
 
 **Response codes**
@@ -254,9 +257,9 @@ attribution. Fully local — no CMS API calls, instant.
 
 ```bash
 # All of them (national union)
-curl "http://localhost:8000/v1/lcd/dx-codes?cpt_code=J1568"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/dx-codes?cpt_code=J1568"
 # Only the diagnoses the New York article accepts
-curl "http://localhost:8000/v1/lcd/dx-codes?cpt_code=J1568&state=NY"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/dx-codes?cpt_code=J1568&state=NY"
 ```
 
 Every article in `qualified_articles` (and in the GUI's Qualified-articles bar and
@@ -301,11 +304,11 @@ this drug?" before you file.
 | `article_id` | No | **Article mode** — verify the dx against one specific article number instead of a J code (`cpt_code` can then be omitted). |
 
 ```bash
-curl "http://localhost:8000/v1/lcd/dx?cpt_code=J1568&icd10=D69.3"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/dx?cpt_code=J1568&icd10=D69.3"
 # The PA question: is this dx accepted where the claim will actually be filed?
-curl "http://localhost:8000/v1/lcd/dx?cpt_code=J1568&icd10=D61.818&state=NY"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/dx?cpt_code=J1568&icd10=D61.818&state=NY"
 # Payer cited article A59105 in the denial — is the dx in that article's list?
-curl "http://localhost:8000/v1/lcd/dx?article_id=59105&icd10=D61.818"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/dx?article_id=59105&icd10=D61.818"
 ```
 
 ```json
@@ -347,7 +350,7 @@ denials (e.g. `A59105`). Returns, fully locally:
 | `article_id` | Yes | Article number, with or without the `A` prefix |
 
 ```bash
-curl "http://localhost:8000/v1/lcd/article?article_id=59105"
+curl "https://cms-lcd-service.onrender.com/v1/lcd/article?article_id=59105"
 ```
 
 Workflow: denial cites an article number → look it up here → pick a dx from *its*
