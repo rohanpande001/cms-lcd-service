@@ -66,7 +66,7 @@
   thead th { position: sticky; top: 0; background: #f0f4f8; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--border); z-index: 1; }
   tbody td { padding: 7px 12px; border-bottom: 1px solid #eef1f5; vertical-align: top; }
   tbody tr:hover { background: #f7fafc; }
-  td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; color: var(--navy); white-space: nowrap; }
+  td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; color: var(--navy); white-space: nowrap; cursor: pointer; user-select: none; }
   td.desc { color: var(--text); }
   footer { max-width: 1100px; margin: 0 auto; padding: 0 18px 40px; font-size: 11.5px; color: var(--muted); }
   .hidden { display: none; }
@@ -180,13 +180,12 @@ function renderQualified() {
 function populateGroupFilter() {
   const d = currentData;
   const sel = $("groupFilter");
-  const prev = sel.value;
   const groups = new Set();
   for (const c of d.dx_codes || []) for (const s of c.sources || []) if (s.group) groups.add(String(s.group));
   const sorted = [...groups].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
   sel.innerHTML = `<option value="">All groups</option>` +
-    sorted.map((g) => `<option value="${esc(g)}" ${g === "1" ? "" : ""}>Group ${esc(g)}${g === "1" ? " (medical necessity)" : ""}</option>`).join("");
-  if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
+    sorted.map((g) => `<option value="${esc(g)}">Group ${esc(g)}${g === "1" ? " (medical necessity)" : ""}</option>`).join("");
+  sel.value = [...sel.options].some((o) => o.value === "1") ? "1" : "";
   currentGroup = sel.value;
 }
 
@@ -278,7 +277,7 @@ function renderTable() {
       const url = `https://www.cms.gov/medicare-coverage-database/view/article.aspx?articleid=${s.article_id}`;
       return `<span class="chip" title="${esc(titles[s.article_id] || "")}${s.group ? " · group " + esc(s.group) : ""} · opens in CMS MCD"><a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${esc(s.article_id)}</a>${s.group ? "·g" + esc(s.group) : ""}</span>`;
     }).join("");
-    return `<tr><td class="code">${esc(c.code)}</td><td class="desc">${esc(c.description || "")}</td><td>${chips}</td></tr>`;
+    return `<tr><td class="code" title="Click to copy">${esc(c.code)}</td><td class="desc">${esc(c.description || "")}</td><td>${chips}</td></tr>`;
   }).join("");
   $("tbody").innerHTML = html || `<tr><td colspan="3" style="padding:18px;color:var(--muted)">No codes match the filter.</td></tr>`;
   $("tableCard").classList.remove("hidden");
@@ -402,6 +401,16 @@ $("filter").addEventListener("input", () => {
   filterTimer = setTimeout(() => { currentFilter = $("filter").value.trim(); renderTable(); }, 120);
 });
 $("groupFilter").addEventListener("change", () => { currentGroup = $("groupFilter").value; renderTable(); });
+
+$("tbody").addEventListener("click", (e) => {
+  const td = e.target.closest("td.code");
+  if (!td) return;
+  const prev = td.innerHTML;
+  navigator.clipboard.writeText(td.textContent.trim()).then(() => {
+    td.innerHTML = '<span style="color:#0a7d43;font-weight:600">Copied &#10003;</span>';
+    setTimeout(() => { td.innerHTML = prev; }, 1200);
+  }, () => setStatus("Could not access clipboard.", true));
+});
 $("lookupBtn").addEventListener("click", lookup);
 $("verifyBtn").addEventListener("click", verify);
 $("csvBtn").addEventListener("click", copyCsv);
