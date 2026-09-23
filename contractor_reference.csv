@@ -1,0 +1,145 @@
+contractor_id,contract_number,contractor_name,contract_type_id
+139,19003,"Noridian Healthcare Solutions, LLC",10
+140,18003,"CGS Administrators, LLC",10
+143,05101,WPS Insurance Corporation,8
+144,05201,WPS Insurance Corporation,8
+145,05301,WPS Insurance Corporation,8
+146,05401,WPS Insurance Corporation,8
+147,05102,WPS Insurance Corporation,9
+148,05202,WPS Insurance Corporation,9
+149,05302,WPS Insurance Corporation,9
+151,05402,WPS Insurance Corporation,9
+228,15102,"CGS Administrators, LLC",9
+236,15004,"CGS Administrators, LLC",11
+238,15202,"CGS Administrators, LLC",9
+239,15101,"CGS Administrators, LLC",8
+240,15201,"CGS Administrators, LLC",8
+264,08101,WPS Insurance Corporation,8
+265,08102,WPS Insurance Corporation,9
+266,08201,WPS Insurance Corporation,8
+267,08202,WPS Insurance Corporation,9
+268,05901,WPS Insurance Corporation,8
+269,06101,"National Government Services, Inc.",8
+270,06201,"National Government Services, Inc.",8
+271,06301,"National Government Services, Inc.",8
+272,06004,"National Government Services, Inc.",11
+273,06102,"National Government Services, Inc.",9
+274,06202,"National Government Services, Inc.",9
+275,06302,"National Government Services, Inc.",9
+297,13101,"National Government Services, Inc.",13
+298,13201,"National Government Services, Inc.",13
+299,13102,"National Government Services, Inc.",13
+300,13202,"National Government Services, Inc.",13
+301,13282,"National Government Services, Inc.",13
+302,13292,"National Government Services, Inc.",13
+303,14411,"National Government Services, Inc.",13
+304,14211,"National Government Services, Inc.",13
+305,14311,"National Government Services, Inc.",13
+306,14511,"National Government Services, Inc.",13
+307,14111,"National Government Services, Inc.",13
+308,14014,"National Government Services, Inc.",13
+309,14112,"National Government Services, Inc.",13
+310,14212,"National Government Services, Inc.",13
+311,14312,"National Government Services, Inc.",13
+312,14512,"National Government Services, Inc.",13
+313,14412,"National Government Services, Inc.",13
+314,12101,"Novitas Solutions, Inc.",12
+315,12201,"Novitas Solutions, Inc.",12
+316,12301,"Novitas Solutions, Inc.",12
+317,12401,"Novitas Solutions, Inc.",12
+318,12501,"Novitas Solutions, Inc.",12
+319,12102,"Novitas Solutions, Inc.",12
+320,12202,"Novitas Solutions, Inc.",12
+321,12302,"Novitas Solutions, Inc.",12
+322,12402,"Novitas Solutions, Inc.",12
+323,12502,"Novitas Solutions, Inc.",12
+324,12901,"Novitas Solutions, Inc.",12
+325,07102,"Novitas Solutions, Inc.",12
+326,07202,"Novitas Solutions, Inc.",12
+327,07101,"Novitas Solutions, Inc.",12
+328,07201,"Novitas Solutions, Inc.",12
+329,07301,"Novitas Solutions, Inc.",12
+330,07302,"Novitas Solutions, Inc.",12
+331,04111,"Novitas Solutions, Inc.",12
+332,04211,"Novitas Solutions, Inc.",12
+333,04311,"Novitas Solutions, Inc.",12
+334,04411,"Novitas Solutions, Inc.",12
+335,04112,"Novitas Solutions, Inc.",12
+336,04212,"Novitas Solutions, Inc.",12
+337,04312,"Novitas Solutions, Inc.",12
+338,04412,"Novitas Solutions, Inc.",12
+339,04911,"Novitas Solutions, Inc.",12
+340,03201,"Noridian Healthcare Solutions, LLC",12
+341,03301,"Noridian Healthcare Solutions, LLC",12
+342,03401,"Noridian Healthcare Solutions, LLC",12
+343,03501,"Noridian Healthcare Solutions, LLC",12
+344,03601,"Noridian Healthcare Solutions, LLC",12
+345,03102,"Noridian Healthcare Solutions, LLC",12
+346,03202,"Noridian Healthcare Solutions, LLC",12
+347,03302,"Noridian Healthcare Solutions, LLC",12
+348,03502,"Noridian Healthcare Solutions, LLC",12
+349,03602,"Noridian Healthcare Solutions, LLC",12
+350,03402,"Noridian Healthcare Solutions, LLC",12
+351,03101,"Noridian Healthcare Solutions, LLC",12
+352,02201,"Noridian Healthcare Solutions, LLC",12
+353,02101,"Noridian Healthcare Solutions, LLC",12
+354,02301,"Noridian Healthcare Solutions, LLC",12
+355,02401,"Noridian Healthcare Solutions, LLC",12
+356,02202,"Noridian Healthcare Solutions, LLC",12
+357,02102,"Noridian Healthcare Solutions, LLC",12
+358,02402,"Noridian Healthcare Solutions, LLC",12
+359,02302,"Noridian Healthcare Solutions, LLC",12
+360,01111,"Noridian Healthcare Solutions, LLC",12
+361,01211,"Noridian Healthcare Solutions, LLC",12
+362,01311,"Noridian Healthcare Solutions, LLC",12
+363,01911,"Noridian Healthcare Solutions, LLC",12
+364,01112,"Noridian Healthcare Solutions, LLC",12
+365,01182,"Noridian Healthcare Solutions, LLC",12
+366,01212,"Noridian Healthcare Solutions, LLC",12
+367,01312,"Noridian Healthcare Solutions, LLC",12
+368,09101,"First Coast Service Options, Inc.",12
+369,09201,"First Coast Service Options, Inc.",12
+370,09102,"First Coast Service Options, Inc.",12
+371,09202,"First Coast Service Options, Inc.",12
+372,09302,"First Coast Service Options, Inc.",12
+373,11004,Palmetto GBA,13
+374,11201,Palmetto GBA,13
+375,11301,Palmetto GBA,13
+376,11401,Palmetto GBA,13
+377,11501,Palmetto GBA,13
+378,11202,Palmetto GBA,13
+379,11302,Palmetto GBA,13
+380,11402,Palmetto GBA,13
+381,11502,Palmetto GBA,13
+388,17013,"CGS Administrators, LLC",10
+389,16013,"Noridian Healthcare Solutions, LLC",10
+391,10111,Palmetto GBA,12
+392,10211,Palmetto GBA,12
+393,10311,Palmetto GBA,12
+394,10112,Palmetto GBA,12
+395,10212,Palmetto GBA,12
+396,10312,Palmetto GBA,12
+500,06101,Wellpoint Federal,8
+501,06201,Wellpoint Federal,8
+502,06301,Wellpoint Federal,8
+503,06004,Wellpoint Federal,11
+504,06102,Wellpoint Federal,9
+505,06202,Wellpoint Federal,9
+506,06302,Wellpoint Federal,9
+507,13101,Wellpoint Federal,13
+508,13201,Wellpoint Federal,13
+509,13102,Wellpoint Federal,13
+510,13202,Wellpoint Federal,13
+511,13282,Wellpoint Federal,13
+512,13292,Wellpoint Federal,13
+513,14411,Wellpoint Federal,13
+514,14211,Wellpoint Federal,13
+515,14311,Wellpoint Federal,13
+516,14511,Wellpoint Federal,13
+517,14111,Wellpoint Federal,13
+518,14014,Wellpoint Federal,13
+519,14112,Wellpoint Federal,13
+520,14212,Wellpoint Federal,13
+521,14312,Wellpoint Federal,13
+522,14512,Wellpoint Federal,13
+523,14412,Wellpoint Federal,13

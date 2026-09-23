@@ -27,3 +27,11 @@ env/
 .idea/
 .vscode/
 *.swp
+.playwright-cli/
+
+# Runtime audit logs
+logs/
+
+# Netlify skill tooling (not part of app)
+.agents/
+skills-lock.json

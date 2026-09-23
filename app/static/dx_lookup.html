@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='18' fill='%230f2a4a'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='%23fff' font-family='Arial' font-weight='bold'%3EDX%3C/text%3E%3C/svg%3E">
+<title>LCD DX Lookup — J Code → ICD-10 Diagnosis Codes</title>
+<style>
+  :root {
+    --navy: #0f2a4a; --navy-2: #16385f; --teal: #0e7c7b; --teal-soft: #e6f4f4;
+    --bg: #f4f6f9; --card: #ffffff; --border: #dfe5ec; --text: #1c2733;
+    --muted: #5c6b7a; --green: #1e7e34; --green-bg: #e6f4ea;
+    --red: #b3261e; --red-bg: #fdecea; --amber: #9a6700; --amber-bg: #fff4d6;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
+  header { background: var(--navy); color: #fff; padding: 18px 28px; display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  header h1 { font-size: 19px; font-weight: 650; letter-spacing: .2px; }
+  header .sub { font-size: 12.5px; color: #a8bcd4; }
+  main { max-width: 1100px; margin: 22px auto 60px; padding: 0 18px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; box-shadow: 0 1px 2px rgba(15,42,74,.05); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11.5px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+  input[type=text] { border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 14px; min-width: 170px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  select { border: 1px solid var(--border); border-radius: 7px; padding: 9px 12px; font-size: 14px; min-width: 170px; background: #fff; color: var(--text); }
+  select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,124,123,.12); }
+  input[type=text]:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(14,124,123,.12); }
+  #jcode { min-width: 210px; }
+  button { border: none; border-radius: 7px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: var(--teal); color: #fff; }
+  .btn-primary:hover { background: #0c6b6a; }
+  .btn-ghost { background: var(--teal-soft); color: var(--teal); }
+  .btn-ghost:hover { background: #d7eeee; }
+  .divider { width: 1px; align-self: stretch; background: var(--border); margin: 0 6px; }
+  .status { font-size: 13px; color: var(--muted); margin-top: 10px; min-height: 18px; }
+  .status.error { color: var(--red); font-weight: 600; }
+  .status.warn { color: var(--amber); font-weight: 600; }
+  .summary { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+  .stat { background: var(--teal-soft); border: 1px solid #cde8e8; border-radius: 8px; padding: 8px 14px; }
+  .stat .n { font-size: 20px; font-weight: 700; color: var(--navy); }
+  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+  .chip { display: inline-block; background: #eef2f7; border: 1px solid var(--border); border-radius: 20px; padding: 2px 10px; font-size: 11.5px; color: var(--navy); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; margin: 2px 3px 2px 0; }
+  .chip a { color: var(--teal); }
+  .chip a:hover { color: #0c6b6a; }
+  .chip.ncd { background: var(--navy); color: #fff; border-color: var(--navy); }
+  .verify-result { border-radius: 8px; padding: 12px 16px; margin-top: 12px; font-size: 13.5px; display: none; }
+  .verify-result.show { display: block; }
+  .verify-result.ok { background: var(--green-bg); border: 1px solid #bfe3c8; }
+  .verify-result.bad { background: var(--red-bg); border: 1px solid #f3c1bd; }
+  .verify-result.warn { background: var(--amber-bg); border: 1px solid #ecd9a0; }
+  .badge { display: inline-block; border-radius: 5px; padding: 2px 9px; font-size: 11px; font-weight: 700; letter-spacing: .5px; margin-right: 8px; vertical-align: 1px; }
+  .badge.ok { background: var(--green); color: #fff; }
+  .badge.bad { background: var(--red); color: #fff; }
+  .badge.warn { background: var(--amber); color: #fff; }
+  .qualified { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: #eef4f4; border: 1px solid #cde2e2; border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+  .qualified .qlabel { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: var(--teal); margin-right: 4px; }
+  .chip.q { background: #fff; border: 1px solid #9fc9c9; color: var(--navy); font-family: inherit; font-size: 12px; padding: 3px 10px; }
+  .chip.q .r { color: var(--teal); font-weight: 700; font-size: 10.5px; text-transform: uppercase; margin-left: 6px; }
+  .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .toolbar select { min-width: 150px; font-size: 13px; padding: 7px 10px; }
+  .toolbar input { min-width: 260px; font-family: inherit; }
+  .toolbar .count { font-size: 12.5px; color: var(--muted); }
+  .tablewrap { max-height: 560px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { position: sticky; top: 0; background: #f0f4f8; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); padding: 9px 12px; border-bottom: 1px solid var(--border); z-index: 1; }
+  tbody td { padding: 7px 12px; border-bottom: 1px solid #eef1f5; vertical-align: top; }
+  tbody tr:hover { background: #f7fafc; }
+  td.code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-weight: 600; color: var(--navy); white-space: nowrap; }
+  td.desc { color: var(--text); }
+  footer { max-width: 1100px; margin: 0 auto; padding: 0 18px 40px; font-size: 11.5px; color: var(--muted); }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>LCD DX Lookup</h1>
+  <span class="sub">J / HCPCS code → ICD-10 diagnosis codes · CMS Medicare Coverage Database · Prior Auth support</span>
+</header>
+<main>
+  <div class="card">
+    <div class="row">
+      <div class="field">
+        <label for="jcode">J / HCPCS code</label>
+        <input type="text" id="jcode" placeholder="e.g. J1568" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="state">Billing state</label>
+        <select id="state"><option value="">National (all)</option></select>
+      </div>
+      <button class="btn-primary" id="lookupBtn">Find DX codes</button>
+      <div class="divider"></div>
+      <div class="field">
+        <label for="dxcode">Optional — verify a diagnosis</label>
+        <input type="text" id="dxcode" placeholder="e.g. D69.3" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="btn-ghost" id="verifyBtn">Check</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <div class="field">
+        <label for="article">or Article number</label>
+        <input type="text" id="article" placeholder="e.g. 59105 or A59105" autocomplete="off" spellcheck="false">
+      </div>
+      <button class="btn-primary" id="articleBtn">Lookup article</button>
+      <span style="font-size:12px;color:var(--muted);align-self:center">Optional: with a billing state selected, article search also tells you whether the article applies there.</span>
+    </div>
+    <div class="status" id="status"></div>
+    <div class="summary hidden" id="summary"></div>
+    <div class="verify-result" id="verifyResult"></div>
+  </div>
+
+  <div class="card hidden" id="tableCard">
+    <div class="qualified hidden" id="qualified"></div>
+    <div class="toolbar">
+      <input type="text" id="filter" placeholder="Filter by code or diagnosis…">
+      <select id="groupFilter"><option value="">All groups</option></select>
+      <span class="count" id="count"></span>
+      <button class="btn-ghost" id="csvBtn" style="margin-left:auto">Copy CSV</button>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:110px">ICD-10</th><th>Diagnosis</th><th style="width:300px">Supporting articles</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+<footer>
+  Data: CMS Medicare Coverage Database bulk export + CMS Coverage API ·
+  <a href="/docs" style="color:var(--teal)">API docs</a> ·
+  <a href="/health" style="color:var(--teal)">health</a>
+</footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let currentData = null;
+let currentFilter = "";
+let currentGroup = "";
+
+function groupOf(c) {
+  return (c.sources || []).some((s) => String(s.group) === currentGroup);
+}
+
+function visibleRows() {
+  const f = currentFilter.toLowerCase();
+  return currentData.dx_codes.filter((c) =>
+    (!f || c.code.toLowerCase().includes(f) || (c.description || "").toLowerCase().includes(f))
+    && (!currentGroup || groupOf(c)));
+}
+
+function renderQualified() {
+  const d = currentData;
+  const el = $("qualified");
+  if (!d) { el.classList.add("hidden"); return; }
+  let items = [];
+  if (d.article_id) {
+    items = [{ display_id: d.display_id || d.article_id, title: d.title || "", role: "" }];
+  } else if (d.qualified_articles && d.qualified_articles.length) {
+    items = d.qualified_articles;
+  } else if (d.candidate_articles && d.candidate_articles.length) {
+    items = d.candidate_articles.filter((a) => a.in_jurisdiction !== false);
+  }
+  if (!items.length) { el.classList.add("hidden"); return; }
+  const chips = items.map((a) => {
+    const aid = a.display_id || a.article_id;
+    const isGov = a.role === "governing-policy";
+    const label = isGov ? "governing policy (national)" : a.role === "local" ? "applies here" : "";
+    const tip = isGov
+      ? "National policy article referenced by the billing article(s) above. J codes map to the billing article, not to the policy; the policy carries the NCD citation."
+      : (a.title || "");
+    const link = a.cms_url
+      ? `<a href="${esc(a.cms_url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${esc(aid)}</a>`
+      : esc(aid);
+    return `<span class="chip q" title="${esc(tip)} · opens in CMS MCD">${link}${a.title ? " — " + esc(a.title.length > 60 ? a.title.slice(0, 57) + "…" : a.title) : ""}${label ? `<span class="r">${label}</span>` : ""}</span>`;
+  }).join("");
+  el.innerHTML = `<span class="qlabel">Qualified articles</span>` + chips;
+  el.classList.remove("hidden");
+}
+
+function populateGroupFilter() {
+  const d = currentData;
+  const sel = $("groupFilter");
+  const prev = sel.value;
+  const groups = new Set();
+  for (const c of d.dx_codes || []) for (const s of c.sources || []) if (s.group) groups.add(String(s.group));
+  const sorted = [...groups].sort((a, b) => (parseInt(a) || 0) - (parseInt(b) || 0));
+  sel.innerHTML = `<option value="">All groups</option>` +
+    sorted.map((g) => `<option value="${esc(g)}" ${g === "1" ? "" : ""}>Group ${esc(g)}${g === "1" ? " (medical necessity)" : ""}</option>`).join("");
+  if ([...sel.options].some((o) => o.value === prev)) sel.value = prev;
+  currentGroup = sel.value;
+}
+
+function stateParam() {
+  const s = $("state").value;
+  return s ? "&state=" + encodeURIComponent(s) : "";
+}
+
+async function loadStates() {
+  try {
+    const r = await fetch("/v1/lcd/states");
+    if (!r.ok) return;
+    const states = await r.json();
+    const sel = $("state");
+    for (const s of states) {
+      if (!s.abbr) continue;
+      const opt = document.createElement("option");
+      opt.value = s.abbr;
+      opt.textContent = s.abbr + " — " + s.name;
+      sel.appendChild(opt);
+    }
+  } catch (e) { /* state filter optional */ }
+}
+loadStates();
+
+function esc(s) {
+  return String(s ?? "").replace(/[&<>'"]/g, (c) => {
+    switch (c) {
+      case "&": return "&amp;";
+      case "<": return "&lt;";
+      case ">": return "&gt;";
+      case '"': return "&quot;";
+      case "'": return "&#39;";
+    }
+  });
+}
+
+function setStatus(msg, isError, style) {
+  const el = $("status");
+  el.textContent = msg || "";
+  el.className = "status" + (style ? " " + style : isError ? " error" : "");
+}
+
+function titleMap() {
+  const m = {};
+  if (currentData) for (const a of currentData.candidate_articles) m[a.article_id] = a.title || "";
+  return m;
+}
+
+function group1Count(d) {
+  return (d.dx_codes || []).filter((c) => (c.sources || []).some((s) => String(s.group) === "1")).length;
+}
+
+function renderSummary() {
+  const d = currentData;
+  const titles = titleMap();
+  let html;
+  if (d.article_id) {
+    html = `<div class="stat"><div class="n">${group1Count(d).toLocaleString()}</div><div class="l">Group 1 — medical necessity</div></div>`;
+    html += `<div class="stat"><div class="n">${d.total_dx_codes.toLocaleString()}</div><div class="l">Codes (all groups)</div></div>`;
+    html += `<div class="stat"><div class="n">${(d.hcpc_codes || []).length}</div><div class="l">J / HCPCS codes</div></div>`;
+    if ((d.states || []).length) html += `<div class="stat" style="max-width:460px"><div class="n" style="font-size:12px;line-height:1.9">${d.states.map(esc).join(" · ")}</div><div class="l">States served</div></div>`;
+    if ((d.contractor_names || []).length) html += `<div class="stat" style="max-width:360px"><div class="n" style="font-size:12.5px;line-height:1.7">${esc(d.contractor_names[0])}${d.contractor_names.length > 1 ? " +" + (d.contractor_names.length - 1) : ""}</div><div class="l">Contractor(s)</div></div>`;
+    if (d.ncd_id) html += `<div class="stat" style="max-width:520px"><div class="n" style="font-size:13px;line-height:1.5">Coverage source: <span class="chip ncd">NCD ${esc(d.ncd_id)}${d.ncd_section ? " §" + esc(d.ncd_section) : ""}</span></div><div class="l" style="text-transform:none">${esc(d.ncd_title || "")}</div></div>`;
+    if (d.governing_article_id) html += `<div class="stat"><div class="n" style="font-size:14px">A${esc(d.governing_article_id)}</div><div class="l">Governing policy article</div></div>`;
+    if ((d.hcpc_codes || []).length) html += `<div style="width:100%;margin-top:4px">${d.hcpc_codes.map((c) => `<span class="chip">${esc(c)}</span>`).join("")}</div>`;
+  } else {
+    html = `<div class="stat"><div class="n">${group1Count(d).toLocaleString()}</div><div class="l">Group 1 — medical necessity</div></div>`;
+    html += `<div class="stat"><div class="n">${d.total_dx_codes.toLocaleString()}</div><div class="l">Codes (all groups)</div></div>`;
+    html += `<div class="stat"><div class="n">${(d.qualified_articles || []).length}</div><div class="l">Billing & coding articles</div></div>`;
+    const nc = (d.qualified_articles || d.candidate_articles || []).find((a) => a.ncd_id);
+    if (nc) html += `<div class="stat" style="max-width:520px"><div class="n" style="font-size:13px;line-height:1.5">Coverage source: <span class="chip ncd">NCD ${esc(nc.ncd_id)}${nc.ncd_section ? " §" + esc(nc.ncd_section) : ""}</span></div><div class="l" style="text-transform:none">${esc(nc.ncd_title || "")}</div></div>`;
+  }
+  if (d.scope_note) html += `<div class="stat" style="max-width:520px;background:var(--amber-bg);border-color:#ecd9a0"><div class="n" style="font-size:12.5px;line-height:1.5">${esc(d.scope_note)}</div></div>`;
+  $("summary").innerHTML = html;
+  $("summary").classList.remove("hidden");
+
+  const arts = $("arts");
+  if (arts) arts.innerHTML = "";
+}
+
+function renderTable() {
+  if (!currentData) return;
+  const titles = titleMap();
+  const rows = visibleRows();
+  $("count").textContent = `Showing ${rows.length.toLocaleString()} of ${currentData.total_dx_codes.toLocaleString()} codes` + (currentGroup ? ` · group ${currentGroup}` : "");
+  const html = rows.map((c) => {
+    const chips = (c.sources || []).map((s) => {
+      const url = `https://www.cms.gov/medicare-coverage-database/view/article.aspx?articleid=${s.article_id}`;
+      return `<span class="chip" title="${esc(titles[s.article_id] || "")}${s.group ? " · group " + esc(s.group) : ""} · opens in CMS MCD"><a href="${url}" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">${esc(s.article_id)}</a>${s.group ? "·g" + esc(s.group) : ""}</span>`;
+    }).join("");
+    return `<tr><td class="code">${esc(c.code)}</td><td class="desc">${esc(c.description || "")}</td><td>${chips}</td></tr>`;
+  }).join("");
+  $("tbody").innerHTML = html || `<tr><td colspan="3" style="padding:18px;color:var(--muted)">No codes match the filter.</td></tr>`;
+  $("tableCard").classList.remove("hidden");
+}
+
+async function lookup() {
+  const code = $("jcode").value.trim().toUpperCase();
+  if (!code) { setStatus("Enter a J / HCPCS code.", true); return; }
+  setStatus("Loading " + code + " …");
+  $("tableCard").classList.add("hidden");
+  $("summary").classList.add("hidden");
+  $("verifyResult").classList.remove("show");
+  try {
+    const r = await fetch("/v1/lcd/dx-codes?cpt_code=" + encodeURIComponent(code) + stateParam());
+    if (!r.ok) {
+      let detail = r.statusText;
+      try { detail = (await r.json()).detail || detail; } catch (e) {}
+      setStatus("No coverage documents found for " + code + " — " + detail, true);
+      return;
+    }
+    currentData = await r.json();
+    currentFilter = "";
+    $("filter").value = "";
+    populateGroupFilter();
+    renderQualified();
+    renderSummary();
+    renderTable();
+    const jur = currentData.jurisdiction && currentData.jurisdiction !== "national (all jurisdictions)"
+      ? " · scoped to " + currentData.jurisdiction.replace("jurisdiction: ", "")
+      : "";
+    if (jur) {
+      setStatus(code + " resolved from CMS data — " + group1Count(currentData) +
+        " group-1 (medical necessity) codes" + jur + "." +
+        (currentData.scope_note ? " " + currentData.scope_note : ""));
+    } else {
+      setStatus("⚠ No state selected — showing the NATIONAL union across all " +
+        currentData.candidate_articles.length + " articles. For PA filing, select the billing state " +
+        "so the list narrows to the article(s) that actually govern the claim.", true, "warn");
+    }
+  } catch (e) {
+    setStatus("Request failed: " + e.message, true);
+  }
+}
+
+async function lookupArticle() {
+  const aid = $("article").value.trim().toUpperCase();
+  if (!aid) { setStatus("Enter an article number (e.g. 59105 or A59105).", true); return; }
+  setStatus("Loading article " + aid + " …");
+  $("tableCard").classList.add("hidden");
+  $("summary").classList.add("hidden");
+  $("verifyResult").classList.remove("show");
+  try {
+    const r = await fetch("/v1/lcd/article?article_id=" + encodeURIComponent(aid) + stateParam());
+    if (!r.ok) {
+      let detail = r.statusText;
+      try { detail = (await r.json()).detail || detail; } catch (e) {}
+      setStatus("Article not found — " + detail, true);
+      return;
+    }
+    currentData = await r.json();
+    currentFilter = "";
+    $("filter").value = "";
+    populateGroupFilter();
+    renderQualified();
+    renderSummary();
+    renderTable();
+    let statusLine = "Article " + currentData.article_id + " — " + (currentData.title || "no title") +
+      " · " + currentData.total_dx_codes + " covered ICD-10 codes";
+    if (currentData.state_in_scope === true) statusLine += " · ✓ applies in the selected state";
+    else if (currentData.state_in_scope === false) statusLine += " · ✗ does NOT apply in the selected state — wrong article for that billing state";
+    else if ((currentData.states || []).length) statusLine += " · states: " + currentData.states.join(", ");
+    setStatus(statusLine + ".", currentData.state_in_scope === false);
+  } catch (e) {
+    setStatus("Request failed: " + e.message, true);
+  }
+}
+
+async function verify() {
+  const code = $("jcode").value.trim().toUpperCase();
+  const aid = $("article").value.trim().toUpperCase();
+  const dx = $("dxcode").value.trim().toUpperCase();
+  if (!dx) { setStatus("Enter an ICD-10 code to verify.", true); return; }
+  if (!aid && !code) { setStatus("Enter a J code or article number (and the ICD-10) to verify.", true); return; }
+  const el = $("verifyResult");
+  el.classList.remove("show", "ok", "bad", "warn");
+  try {
+    const url = aid
+      ? "/v1/lcd/dx?article_id=" + encodeURIComponent(aid) + "&icd10=" + encodeURIComponent(dx)
+      : "/v1/lcd/dx?cpt_code=" + encodeURIComponent(code) + "&icd10=" + encodeURIComponent(dx) + stateParam();
+    const r = await fetch(url);
+    if (!r.ok) { setStatus("Verify failed: " + r.status, true); return; }
+    const d = await r.json();
+    const cls = d.supported && !d.noncovered_in.length ? "ok" : d.supported ? "warn" : "bad";
+    const badge = d.supported && !d.noncovered_in.length ? "SUPPORTED" : d.supported ? "CAUTION" : "NOT SUPPORTED";
+    el.className = "verify-result show " + cls;
+    el.innerHTML = `<span class="badge ${cls}">${badge}</span>${esc(d.verdict)}
+      ${d.noncovered_in.length ? `<br><span style="color:var(--red)">Explicitly NOT covered in: ${d.noncovered_in.map(esc).join(", ")}</span>` : ""}`;
+  } catch (e) {
+    setStatus("Verify failed: " + e.message, true);
+  }
+}
+
+function copyCsv() {
+  if (!currentData) return;
+  const rows = visibleRows();
+  const lines = ["ICD10,Description,Sources"];
+  for (const c of rows) {
+    const desc = '"' + (c.description || "").replace(/"/g, '""') + '"';
+    const src = (c.sources || []).map((s) => s.article_id + (s.group ? " (g" + s.group + ")" : "")).join("; ");
+    lines.push(c.code + "," + desc + ',"' + src + '"');
+  }
+  navigator.clipboard.writeText(lines.join("\n")).then(
+    () => { const b = $("csvBtn"); b.textContent = "Copied ✓"; setTimeout(() => (b.textContent = "Copy CSV"), 1500); },
+    () => setStatus("Could not access clipboard.", true)
+  );
+}
+
+let filterTimer = null;
+$("filter").addEventListener("input", () => {
+  clearTimeout(filterTimer);
+  filterTimer = setTimeout(() => { currentFilter = $("filter").value.trim(); renderTable(); }, 120);
+});
+$("groupFilter").addEventListener("change", () => { currentGroup = $("groupFilter").value; renderTable(); });
+$("lookupBtn").addEventListener("click", lookup);
+$("verifyBtn").addEventListener("click", verify);
+$("csvBtn").addEventListener("click", copyCsv);
+$("articleBtn").addEventListener("click", lookupArticle);
+$("jcode").addEventListener("keydown", (e) => e.key === "Enter" && lookup());
+$("dxcode").addEventListener("keydown", (e) => e.key === "Enter" && verify());
+$("article").addEventListener("keydown", (e) => e.key === "Enter" && lookupArticle());
+</script>
+</body>
+</html>
